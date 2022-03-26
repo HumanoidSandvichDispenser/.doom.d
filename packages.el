@@ -53,3 +53,6 @@
 (package! beacon)
 (package! minimap)
 (package! good-scroll)
+(package! mixed-pitch)
+(package! org-make-toc)
+(package! youtube-dl)

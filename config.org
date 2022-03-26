@@ -1,7 +1,16 @@
 #+TITLE: Doom Emacs Configuration
 #+PROPERTY: header-args :tangle config.el :results silent
+#+STARTUP: inlineimages
 
-[[./packages.el][Package Configuration]]
+#+ATTR_ORG: :width 128
+[[./assets/Okayeg.png]]
+
+* Table of Contents
+:PROPERTIES:
+:TOC: :include all :depth 2
+:END:
+
+- [[./packages.el][Package Configuration]]
 
 * Reloading Configuration
 
@@ -40,8 +49,8 @@ font string. You generally only need these two:
       doom-variable-pitch-font (font-spec :family "sans" :size 13))~
 
 #+BEGIN_SRC emacs-lisp
-(setq doom-font (font-spec :family "monospace" :size 12 :weight 'regular)
-      doom-variable-pitch-font (font-spec :family "Iosevka SS17" :size 12))
+(setq doom-font (font-spec :family "Iosevka Sandvich" :size 16 :weight 'regular)
+      doom-variable-pitch-font (font-spec :family "Overpass" :size 16))
 #+END_SRC
 
 There are two ways to load a theme. Both assume the theme is installed and
@@ -54,8 +63,16 @@ available. You can either set ~doom-theme~ or manually load a theme with the
 
 * Appearance
 
+Show line numbers on the left column.
+
 #+BEGIN_SRC emacs-lisp
 (setq display-line-numbers-type t)
+#+END_SRC
+
+Set the text scale step to 1.1x (instead of the default 1.2x)
+
+#+BEGIN_SRC emacs-lisp
+(setq text-scale-mode-step 1.1)
 #+END_SRC
 
 * Keybindings
@@ -73,6 +90,7 @@ These are just normal keybinds.
 (evil-define-key 'normal 'global (kbd "C-s") 'save-buffer)
 (evil-define-key 'insert 'global (kbd "C-p") 'previous-line)
 (evil-define-key 'insert 'global (kbd "C-n") 'next-line)
+(evil-define-key 'insert 'global (kbd "C-S-v") 'evil-paste-before)
 #+END_SRC
 
 Keybindings to toggle specific modes.
@@ -89,6 +107,16 @@ Keybindings to toggle specific modes.
 
 * Plugin Configuration
 
+** Doom Modeline
+
+Enable color icons for the major mode, but disable *modal icons* (~evil-mode~).
+
+#+BEGIN_SRC emacs-lisp
+(setq doom-modeline-major-mode-color-icon t)
+
+(setq doom-modeline-modal-icon nil)
+#+END_SRC
+
 ** Beacon
 
 #+BEGIN_SRC emacs-lisp
@@ -103,10 +131,10 @@ Keybindings to toggle specific modes.
 
 ** Evil Snipe
 
-Make ~evil-snipe~ search across the entire buffer, like ~vim-sneak~.
+Make ~evil-snipe~ search the visible part of the buffer, like ~vim-sneak~.
 
 #+BEGIN_SRC emacs-lisp
-(setq evil-snipe-scope 'buffer)
+(setq evil-snipe-scope 'visible)
 #+END_SRC
 
 * Orgmode
@@ -117,30 +145,62 @@ Set where orgfiles are normally located.
 (setq org-directory "~/Dropbox/Documents/org")
 #+END_SRC
 
+Enable mouse support for org.
+
+#+BEGIN_SRC emacs-lisp
+(require 'org-mouse)
+#+END_SRC
+
 ** Org-specific Keybindings
 
 #+BEGIN_SRC emacs-lisp
-(map! :)
+(map! :map org-mode-map
+      :n "M-RET"
+      (lambda () (interactive)
+        (evil-insert-state)
+        (org-meta-return)))
 #+END_SRC
 
 ** Appearance
 
-This sets ellipses of collapsed org headers.
+This sets the symbols of the ellipses of collapsed org headers.
 
 #+BEGIN_SRC emacs-lisp
-(setq org-ellipsis "⤵")
+(setq org-ellipsis " ")
 #+END_SRC
 
-This sets the font height of org headers.
+This sets the font height of org headers and applies mixed-pitch.
 
 #+BEGIN_SRC emacs-lisp
-(add-hook 'org-mode-hook (lambda () (set-face-attribute 'org-level-1 nil :height 180 :weight 'regular :underline) (set-face-attribute 'org-level-2 nil :height 150 :weight 'regular)))
+;(add-to-ordered-list mixed-pitch-fixed-pitch-faces 'org-level-1)
+;(add-to-ordered-list mixed-pitch-fixed-pitch-faces 'org-level-2)
+;(add-to-ordered-list mixed-pitch-fixed-pitch-faces 'org-level-3)
+
+(add-hook 'org-mode-hook (lambda ()
+                           (set-face-attribute 'org-level-1 nil :height 180 :weight 'regular :underline)
+                           (set-face-attribute 'org-level-2 nil :height 150 :weight 'regular)))
+                           ;(set-face-attribute 'org-level-1 nil :height 180 :weight 'regular :underline)
+                           ;(set-face-attribute 'org-level-2 nil :height 150 :weight 'regular)
+                           ;(mixed-pitch-mode)))
+
+;(add-to-list mixed-pitch-fixed-pitch-faces)
 #+END_SRC
 
 Sets the character of plainlists ([[https://jessicastringham.net/2016/10/02/org-mode-bullet/][source]]). Also sets the header bullet symbols.
 
 #+BEGIN_SRC emacs-lisp
-(font-lock-add-keywords 'org-mode '(("^ +\\([-*]\\) " 0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))) (setq org-superstar-headline-bullets-list (list "☰" "❖" "" "" "")) ;❧
+(font-lock-add-keywords 'org-mode '(("^ +\\([-*]\\) " 0
+                                     (prog1 () (compose-region (match-beginning 1) (match-end 1) "•")))))
+
+(setq org-superstar-headline-bullets-list (list "☰" "❖" "" "" "")) ;❧
+
+(setq org-superstar-special-todo-item t)
+#+END_SRC
+
+Don't use the original width of the image when being displayed.
+
+#+BEGIN_SRC emacs-lisp
+(setq org-image-actual-width nil)
 #+END_SRC
 
 *** Source Block Delimiters
