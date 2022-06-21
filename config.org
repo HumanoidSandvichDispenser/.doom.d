@@ -5,10 +5,7 @@
 #+ATTR_ORG: :width 128
 [[./assets/Okayeg.png]]
 
-* Table of Contents
-:PROPERTIES:
-:TOC: :include all :depth 2
-:END:
+* Other Files
 
 - [[./packages.el][Package Configuration]]
 
@@ -75,6 +72,24 @@ Set the text scale step to 1.1x (instead of the default 1.2x)
 (setq text-scale-mode-step 1.1)
 #+END_SRC
 
+** Indentation
+
+Don't add extra indentation in C# function bodies for whatever reason.
+
+#+begin_src emacs-lisp
+(defun my-csharp-mode-fn ()
+  (c-set-offset 'substatement-open 0))
+(add-hook 'csharp-mode-hook 'my-csharp-mode-fn)
+#+end_src
+
+** Tabs
+
+Always show the tabline by default.
+
+#+begin_src emacs-lisp
+;(add-hook 'text-mode-hook 'tab-line-mode)
+#+end_src
+
 * Keybindings
 
 Remap the semicolon key to colon, which would map to ~evil-ex~.
@@ -105,6 +120,13 @@ Keybindings to toggle specific modes.
        :desc "Toggle minimap" "m" #'minimap-mode))
 #+END_SRC
 
+Bind ~s~ to ~avy-goto-char-2~, similarly to ~vim-sneak~.
+
+#+begin_src  emacs-lisp
+(map! :n "s" nil
+      :m "s" 'avy-goto-char-2)
+#+end_src
+
 * Plugin Configuration
 
 ** Doom Modeline
@@ -129,13 +151,33 @@ Enable color icons for the major mode, but disable *modal icons* (~evil-mode~).
 (setq minimap-window-location 'right)
 #+END_SRC
 
-** Evil Snipe
+** Smart Semicolon
 
-Make ~evil-snipe~ search the visible part of the buffer, like ~vim-sneak~.
+Insert semicolons smartly and use backspace to undo smart semicolon placement.
 
-#+BEGIN_SRC emacs-lisp
-(setq evil-snipe-scope 'visible)
-#+END_SRC
+Enable smart semicolon for C-related languages (C, C++, C#, Java, etc.)
+
+#+begin_src emacs-lisp
+(add-hook 'c-mode-common-hook #'smart-semicolon-mode)
+#+end_src
+
+* LSP
+
+Set up LSP servers for supported languages.
+
+#+begin_src emacs-lisp
+(add-hook 'csharp-mode-hook 'lsp)
+#+end_src
+
+** LSP-specific Keybindings
+
+Find all references of the current symbol.
+
+#+begin_src emacs-lisp
+(map! :leader
+      (:prefix ("c" . "code")
+       :desc "LSP Find references" "R" #'lsp-find-references))
+#+end_src
 
 * Orgmode
 
@@ -150,6 +192,12 @@ Enable mouse support for org.
 #+BEGIN_SRC emacs-lisp
 (require 'org-mouse)
 #+END_SRC
+
+Keep track of when org-mode items are marked as DONE
+
+#+begin_src emacs-lisp
+(setq org-log-done 'time)
+#+end_src
 
 ** Org-specific Keybindings
 

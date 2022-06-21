@@ -56,3 +56,9 @@
 (package! mixed-pitch)
 (package! org-make-toc)
 (package! youtube-dl)
+(package! lsp-mode)
+(package! smart-semicolon)
+(package! phindent
+  :recipe (:repo "https://github.com/guillaumebrunerie/phindent-mode" :files ("*.el")))
+(package! atom-one-dark-theme)
+(package! evil-snipe :disable t)
