@@ -2,8 +2,8 @@
 #+PROPERTY: header-args :tangle config.el :results silent
 #+STARTUP: inlineimages
 
-#+ATTR_ORG: :width 128
-[[./assets/Okayeg.png]]
+#+ATTR_ORG: :height 128
+[[./assets/apuEZY.png]]
 
 * Other Files
 
@@ -66,11 +66,24 @@ Show line numbers on the left column.
 (setq display-line-numbers-type t)
 #+END_SRC
 
-Set the text scale step to 1.1x (instead of the default 1.2x)
+Set the text scale step to 1.1x (instead of the default 1.2x).
 
 #+BEGIN_SRC emacs-lisp
 (setq text-scale-mode-step 1.1)
 #+END_SRC
+
+Enable bold and italic faces per theme.
+
+#+begin_src emacs-lisp
+(setq doom-themes-enable-bold t)
+(setq doom-themes-enable-italic t)
+#+end_src
+
+Enable good scroll mode (smooth scrolling).
+
+#+begin_src emacs-lisp
+(good-scroll-mode)
+#+end_src
 
 ** Indentation
 
@@ -105,8 +118,16 @@ These are just normal keybinds.
 (evil-define-key 'normal 'global (kbd "C-s") 'save-buffer)
 (evil-define-key 'insert 'global (kbd "C-p") 'previous-line)
 (evil-define-key 'insert 'global (kbd "C-n") 'next-line)
-(evil-define-key 'insert 'global (kbd "C-S-v") 'evil-paste-before)
+(evil-define-key 'insert 'global (kbd "C-S-v") 'clipboard-yank)
+(evil-define-key 'visual 'global (kbd "C-S-c") 'evil-yank)
 #+END_SRC
+
+Don't copy to clipboard when killing the previous word.
+
+#+begin_src emacs-lisp
+(map! :i "C-w" 'evil-delete-backward-word)
+(map! :i "C-<backspace>" 'evil-delete-backward-word)
+#+end_src
 
 Keybindings to toggle specific modes.
 
@@ -127,28 +148,54 @@ Bind ~s~ to ~avy-goto-char-2~, similarly to ~vim-sneak~.
       :m "s" 'avy-goto-char-2)
 #+end_src
 
+Bind arrow keys to switch between tabs.
+
+#+begin_src emacs-lisp
+(map! :leader :n "<left>" 'centaur-tabs-backward)
+(map! :leader :n "<right>" 'centaur-tabs-forward)
+#+end_src
+
+Create a new window and pick a buffer.
+
+#+begin_src emacs-lisp
+(map! :leader
+      (:prefix ("b" . "buffer")
+       :desc "Pick buffer in new window" "w" #'switch-to-buffer-other-window))
+#+end_src
+
+Don't exit insert mode by typing ~jk~.
+
+#+begin_src emacs-lisp
+(setq evil-escape-key-sequence nil)
+#+end_src
+
 * Plugin Configuration
+
+** Doom Dashboard
+
+#+begin_src emacs-lisp
+(setq fancy-splash-image "/home/sandvich/.doom.d/assets/apuEZY.png")
+#+end_src
+
+** Evil Mode
+
+Don't yank from cursor to the end of the line when using ~Y~, similar to vim's behavior.
+
+#+begin_src emacs-lisp
+(setq evil-want-Y-yank-to-eol nil)
+#+end_src
 
 ** Doom Modeline
 
 Enable color icons for the major mode, but disable *modal icons* (~evil-mode~).
 
 #+BEGIN_SRC emacs-lisp
-(setq doom-modeline-major-mode-color-icon t)
-
-(setq doom-modeline-modal-icon nil)
-#+END_SRC
-
-** Beacon
-
-#+BEGIN_SRC emacs-lisp
-(beacon-mode t)
-#+END_SRC
-
-** Minimap
-
-#+BEGIN_SRC emacs-lisp
-(setq minimap-window-location 'right)
+(setq doom-modeline-major-mode-color-icon t
+      doom-modeline-major-mode-icon t
+      doom-modeline-modal-icon nil
+      doom-themes-padded-modeline t
+      doom-modeline-project-detection 'projectile
+      doom-modeline-workspace-name t)
 #+END_SRC
 
 ** Smart Semicolon
@@ -159,6 +206,90 @@ Enable smart semicolon for C-related languages (C, C++, C#, Java, etc.)
 
 #+begin_src emacs-lisp
 (add-hook 'c-mode-common-hook #'smart-semicolon-mode)
+#+end_src
+
+** Elfeed
+
+Pull RSS feeds from these URLs
+
+#+begin_src emacs-lisp
+(use-package elfeed
+  :config
+  (setq elfeed-feeds
+      (quote
+       (("https://sandvich.xyz/index.xml")
+        ("https://lukesmith.xyz/index.xml")
+        ("https://reddit.com/r/forsen.rss")))))
+#+end_src
+
+*** Elfeed Goodies
+
+Initialize Elfeed Goodies
+
+#+begin_src emacs-lisp
+(use-package elfeed-goodies
+  :init (elfeed-goodies/setup))
+#+end_src
+
+** Centaur Tabs
+
+Configure appearance of Centaur Tabs.
+
+#+begin_src emacs-lisp
+(after! centaur-tabs
+  :config
+  (setq centaur-tabs-set-icons t
+        centaur-tabs-gray-out-icons t
+        centaur-tabs-style "wave"
+        centaur-tabs-set-modified-marker t))
+#+end_src
+
+Centaur Tabs doesn't always load properly when launched from ~emacsclient~ and ~emacs --daemon~. See [[https://github.com/ema2159/centaur-tabs/issues/127][ema2159/centaur-tabs#127]].
+
+** Awesome Tab
+
+This function allows grouping buffers by project than buffer type.
+
+#+begin_src emacs-lisp
+(defun awesome-tab-project-groups ()
+  "`awesome-tab-buffer-groups' control buffers' group rules."
+  (list
+   (cond
+    ((or (string-equal "*" (substring (buffer-name) 0 1))
+         (memq major-mode '(magit-process-mode
+                            magit-status-mode
+                            magit-diff-mode
+                            magit-log-mode
+                            magit-file-mode
+                            magit-blob-mode
+                            magit-blame-mode
+                            )))
+     "Emacs")
+    ((derived-mode-p 'eshell-mode)
+     "EShell")
+    ((derived-mode-p 'dired-mode)
+     "Dired")
+    (t
+     (awesome-tab-get-group-name (current-buffer))))))
+#+end_src
+
+Configure Awesome Tab
+
+#+begin_src emacs-lisp
+(use-package! awesome-tab
+  :config
+  (setq awesome-tab-buffer-groups-function 'awesome-tab-project-groups)
+  (awesome-tab-mode t))
+#+end_src
+
+** Emmet Mode
+
+Zencoding expands CSS selectors into HTML tags.
+
+Add a hook to enable the mode on markup languages
+
+#+begin_src emacs-lisp
+(add-hook 'sgml-mode-hook 'emmet-mode)
 #+end_src
 
 * LSP
@@ -199,7 +330,15 @@ Keep track of when org-mode items are marked as DONE
 (setq org-log-done 'time)
 #+end_src
 
+Use shift-arrow to select in orgmode.
+
+#+begin_src emacs-lisp
+(setq org-support-shift-select t)
+#+end_src
+
 ** Org-specific Keybindings
+
+Insert a new header with ~(org-meta-return)~ and enter insert mode while in normal mode.
 
 #+BEGIN_SRC emacs-lisp
 (map! :map org-mode-map
@@ -208,6 +347,29 @@ Keep track of when org-mode items are marked as DONE
         (evil-insert-state)
         (org-meta-return)))
 #+END_SRC
+
+Keybind for searching headers across an org buffer or all org buffers.
+
+#+begin_src emacs-lisp
+(map! :leader
+      (:prefix ("s" . "search")
+       :desc "Search org header" "h" #'counsel-org-goto))
+
+(map! :leader
+      (:prefix ("s" . "search")
+       :desc "Search org header in all buffers" "H" #'counsel-org-goto-all))
+#+end_src
+
+** Visual Line Mode
+
+Visual line mode automatically wraps text to a specified fill column. Also enables ~mixed-pitch-mode~ for sans-serif font rendering.
+
+#+begin_src emacs-lisp
+(add-hook 'org-mode-hook (lambda ()
+                           (setq fill-column 80
+                                 evil-respect-visual-line-mode t)
+                           (auto-fill-mode)))
+#+end_src
 
 ** Appearance
 
@@ -220,18 +382,9 @@ This sets the symbols of the ellipses of collapsed org headers.
 This sets the font height of org headers and applies mixed-pitch.
 
 #+BEGIN_SRC emacs-lisp
-;(add-to-ordered-list mixed-pitch-fixed-pitch-faces 'org-level-1)
-;(add-to-ordered-list mixed-pitch-fixed-pitch-faces 'org-level-2)
-;(add-to-ordered-list mixed-pitch-fixed-pitch-faces 'org-level-3)
-
 (add-hook 'org-mode-hook (lambda ()
                            (set-face-attribute 'org-level-1 nil :height 180 :weight 'regular :underline)
                            (set-face-attribute 'org-level-2 nil :height 150 :weight 'regular)))
-                           ;(set-face-attribute 'org-level-1 nil :height 180 :weight 'regular :underline)
-                           ;(set-face-attribute 'org-level-2 nil :height 150 :weight 'regular)
-                           ;(mixed-pitch-mode)))
-
-;(add-to-list mixed-pitch-fixed-pitch-faces)
 #+END_SRC
 
 Sets the character of plainlists ([[https://jessicastringham.net/2016/10/02/org-mode-bullet/][source]]). Also sets the header bullet symbols.
@@ -240,9 +393,9 @@ Sets the character of plainlists ([[https://jessicastringham.net/2016/10/02/org-
 (font-lock-add-keywords 'org-mode '(("^ +\\([-*]\\) " 0
                                      (prog1 () (compose-region (match-beginning 1) (match-end 1) "•")))))
 
-(setq org-superstar-headline-bullets-list (list "☰" "❖" "" "" "")) ;❧
-
-(setq org-superstar-special-todo-item t)
+(setq org-superstar-headline-bullets-list (list "☰" "❖" "") ;❧
+      org-superstar-special-todo-item t
+      org-superstar-cycle-headline-bullets nil)
 #+END_SRC
 
 Don't use the original width of the image when being displayed.

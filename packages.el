@@ -50,8 +50,8 @@
 ;(unpin! t)
 
 (package! selectric-mode)
-(package! beacon)
-(package! minimap)
+;(package! beacon)
+;(package! minimap)
 (package! good-scroll)
 (package! mixed-pitch)
 (package! org-make-toc)
@@ -61,4 +61,20 @@
 (package! phindent
   :recipe (:repo "https://github.com/guillaumebrunerie/phindent-mode" :files ("*.el")))
 (package! atom-one-dark-theme)
+(package! tree-sitter)
+(package! tree-sitter-langs)
+(package! tree-sitter-indent)
 (package! evil-snipe :disable t)
+(package! md4rd
+  :recipe (:host github
+           :repo "ahungry/md4rd" :files ("*.el")))
+(package! elfeed-goodies)
+(package! emmet-mode)
+(package! project-tab-groups)
+(package! elquery)
+(package! request)
+(package! chan
+  :recipe (:host github
+           :repo "yyyuuuuu/chan" :files ("*.el")))
+(package! awesome-tab
+  :disable t)
